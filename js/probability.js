@@ -242,41 +242,52 @@
     };
   }
 
-  function monteCarlo(deckSize, targetCards, cardsSeen, targetHits = 0, useAtLeast = false, trials = 25000) {
+  async function monteCarlo(deckSize, targetCards, cardsSeen, targetHits = 0, useAtLeast = false, trials = 25000, onProgress = null) {
     let matchingTrials = 0;
     const expectedHits = (cardsSeen * targetCards) / deckSize;
     const isAtMost = useAtLeast && targetHits < expectedHits;
+    const chunkSize = 5000;
 
-    for (let trial = 0; trial < trials; trial += 1) {
-      let hitsSeen = 0;
-      let remainingDeck = deckSize;
-      let remainingTargets = targetCards;
+    for (let start = 0; start < trials; start += chunkSize) {
+      const end = Math.min(start + chunkSize, trials);
 
-      for (let draw = 0; draw < cardsSeen; draw += 1) {
-        const hit = Math.random() < remainingTargets / remainingDeck;
+      for (let trial = start; trial < end; trial += 1) {
+        let hitsSeen = 0;
+        let remainingDeck = deckSize;
+        let remainingTargets = targetCards;
 
-        if (hit) {
-          hitsSeen += 1;
-          remainingTargets -= 1;
+        for (let draw = 0; draw < cardsSeen; draw += 1) {
+          const hit = Math.random() < remainingTargets / remainingDeck;
+
+          if (hit) {
+            hitsSeen += 1;
+            remainingTargets -= 1;
+          }
+
+          remainingDeck -= 1;
         }
 
-        remainingDeck -= 1;
-      }
-
-      let match = false;
-      if (useAtLeast) {
-        if (isAtMost) {
-          match = hitsSeen <= targetHits;
+        let match = false;
+        if (useAtLeast) {
+          if (isAtMost) {
+            match = hitsSeen <= targetHits;
+          } else {
+            match = hitsSeen >= targetHits;
+          }
         } else {
-          match = hitsSeen >= targetHits;
+          match = hitsSeen === targetHits;
         }
-      } else {
-        match = hitsSeen === targetHits;
+
+        if (match) {
+          matchingTrials += 1;
+        }
       }
 
-      if (match) {
-        matchingTrials += 1;
+      if (onProgress) {
+        onProgress(end / trials);
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
     return matchingTrials / trials;

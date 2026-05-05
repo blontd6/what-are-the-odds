@@ -13,12 +13,15 @@
 
   App.initHandOdds = function initHandOdds() {
     const form = document.querySelector("#analyzer-form");
+    const useSimInput = document.querySelector("#use-sim");
+    const simTrialsContainer = document.querySelector("#sim-trials-container");
     const probabilityLabelNode = document.querySelector("#probability-label");
     const probabilityNode = document.querySelector("#probability");
     const rarityNode = document.querySelector("#rarity");
     const summaryNode = document.querySelector("#summary");
     const formulaNode = document.querySelector("#formula");
     const simulationPanel = document.querySelector("#simulation");
+    const simulationProgressNode = document.querySelector("#simulation-progress");
     const simulationRateNode = document.querySelector("#simulation-rate");
     const simulationDiffNode = document.querySelector("#simulation-diff");
     const errorNode = document.querySelector("#error-message");
@@ -48,6 +51,7 @@
         targetHits: Number(data.get("targetHits")),
         useAtLeast: data.get("useAtLeast") === "on",
         useSim: data.get("useSim") === "on",
+        simTrials: Number(data.get("simTrials") || 25000),
       };
     }
 
@@ -75,7 +79,7 @@
       return null;
     }
 
-    function render(values) {
+    async function render(values) {
       const validationError = validate(values);
 
       if (validationError) {
@@ -118,19 +122,40 @@
         return;
       }
 
-      const simulated = monteCarlo(values.deckSize, values.targetCards, values.cardsSeen, values.targetHits, values.useAtLeast);
+      simulationPanel.hidden = false;
+      simulationProgressNode.hidden = false;
+      simulationRateNode.textContent = "Simulating...";
+      simulationDiffNode.textContent = "";
+
+      const simulated = await monteCarlo(
+        values.deckSize,
+        values.targetCards,
+        values.cardsSeen,
+        values.targetHits,
+        values.useAtLeast,
+        values.simTrials,
+        (progress) => {
+          simulationProgressNode.textContent = `Progress: ${(progress * 100).toFixed(1)}%`;
+        }
+      );
+
+      simulationProgressNode.hidden = true;
       simulationRateNode.textContent = `Simulated hit rate: ${percent(simulated)}`;
       simulationDiffNode.textContent = `Difference from exact result: ${percent(
         Math.abs(simulated - probability),
       )}`;
-      simulationPanel.hidden = false;
     }
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      render(readValues());
+    useSimInput.addEventListener("change", () => {
+      simTrialsContainer.hidden = !useSimInput.checked;
     });
 
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await render(readValues());
+    });
+
+    simTrialsContainer.hidden = !useSimInput.checked;
     render(readValues());
   };
 })();

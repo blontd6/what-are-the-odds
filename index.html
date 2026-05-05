@@ -65,6 +65,11 @@
               <span>Run Monte Carlo check</span>
             </label>
 
+            <label id="sim-trials-container" hidden>
+              <span>Number of simulations</span>
+              <input id="sim-trials" name="simTrials" type="number" min="1" step="1" value="25000" />
+            </label>
+
             <button type="submit">Analyze hand</button>
           </form>
 
@@ -86,6 +91,7 @@
 
             <div id="simulation" class="simulation" hidden>
               <p class="label">Monte Carlo check</p>
+              <p id="simulation-progress" class="simulation-line" hidden></p>
               <p id="simulation-rate" class="simulation-line"></p>
               <p id="simulation-diff" class="simulation-line muted"></p>
             </div>
