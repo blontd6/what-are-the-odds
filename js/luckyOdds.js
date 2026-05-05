@@ -8,7 +8,7 @@
     luckyRate,
     oneIn,
     percent,
-    tailProbabilityMode,
+    tailBinomialMode,
   } = App.probability;
 
   App.initLuckyOdds = function initLuckyOdds() {
@@ -106,7 +106,7 @@
 
       if (values.enableMult) {
         const multMode = values.useAtLeast
-          ? tailProbabilityMode(values.triggers, values.multHits, multRate.effectiveChance)
+          ? tailBinomialMode(values.triggers, values.multHits, multRate.effectiveChance)
           : null;
         const multProbability = values.useAtLeast
           ? multMode.probability
@@ -128,7 +128,7 @@
 
       if (values.enableMoney) {
         const moneyMode = values.useAtLeast
-          ? tailProbabilityMode(values.triggers, values.moneyHits, moneyRate.effectiveChance)
+          ? tailBinomialMode(values.triggers, values.moneyHits, moneyRate.effectiveChance)
           : null;
         const moneyProbability = values.useAtLeast
           ? moneyMode.probability

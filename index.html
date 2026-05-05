@@ -1,284 +1,238 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hand Unlikelyness</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <main class="shell">
-      <section class="frame">
-        <header class="topbar">
-          <div>
-            <h1>How unlikely is this hand?</h1>
-          </div>
-          <p class="intro">
-            1.0.0
-          </p>
-        </header>
 
-        <nav class="tabs" aria-label="Tools">
-          <button class="tab is-active" type="button" data-tab="odds" aria-selected="true">
-            Hand odds
-          </button>
-          <button class="tab" type="button" data-tab="lucky" aria-selected="false">
-            Lucky odds
-          </button>
-          <button class="tab" type="button" data-tab="bloodstone" aria-selected="false">
-            Bloodstone
-          </button>
-        </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hand Unlikelyness</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-        <section class="tab-panel is-active" data-panel="odds">
-          <div class="panel">
-            <form id="analyzer-form" class="controls">
-              <label>
-                <span>Deck size</span>
-                <input id="deck-size" name="deckSize" type="number" min="1" value="40" required />
-              </label>
+<body>
+  <main class="shell">
+    <section class="frame">
+      <header class="topbar">
+        <div>
+          <h1>How unlikely is this hand?</h1>
+        </div>
+        <p class="intro">
+          1.0.0
+        </p>
+      </header>
 
-              <label>
-                <span>Valuable cards in deck</span>
-                <input
-                  id="target-cards"
-                  name="targetCards"
-                  type="number"
-                  min="0"
-                  value="6"
-                  required
-                />
-              </label>
+      <nav class="tabs" aria-label="Tools">
+        <button class="tab is-active" type="button" data-tab="odds" aria-selected="true">
+          Hand odds
+        </button>
+        <button class="tab" type="button" data-tab="lucky" aria-selected="false">
+          Lucky odds
+        </button>
+        <button class="tab" type="button" data-tab="bloodstone" aria-selected="false">
+          Bloodstone
+        </button>
+      </nav>
 
-              <label>
-                <span>Cards already seen</span>
-                <input
-                  id="cards-seen"
-                  name="cardsSeen"
-                  type="number"
-                  min="0"
-                  value="18"
-                  required
-                />
-              </label>
+      <section class="tab-panel is-active" data-panel="odds">
+        <div class="panel">
+          <form id="analyzer-form" class="controls">
+            <label>
+              <span>Deck size</span>
+              <input id="deck-size" name="deckSize" type="number" min="1" value="40" required />
+            </label>
 
-              <label class="toggle">
-                <input id="use-sim" name="useSim" type="checkbox" />
-                <span>Run Monte Carlo check</span>
-              </label>
+            <label>
+              <span>Valuable cards in deck</span>
+              <input id="target-cards" name="targetCards" type="number" min="0" value="6" required />
+            </label>
 
-              <button type="submit">Analyze hand</button>
-            </form>
+            <label>
+              <span>Cards already seen</span>
+              <input id="cards-seen" name="cardsSeen" type="number" min="0" value="18" required />
+            </label>
 
-            <section class="results" aria-live="polite">
-              <div class="stat">
-                <p class="label">Miss streak probability</p>
-                <p id="probability" class="value">0%</p>
-              </div>
+            <label>
+              <span>Desired cards drawn</span>
+              <input id="target-hits" name="targetHits" type="number" min="0" value="0" required />
+            </label>
 
-              <div class="stat">
-                <p class="label">Rarity</p>
-                <p id="rarity" class="value">1 in 0</p>
-              </div>
+            <label class="toggle">
+              <input id="use-at-least" name="useAtLeast" type="checkbox" />
+              <span>Use tail probability (auto)</span>
+            </label>
 
-              <div class="summary-card">
-                <p class="label">Read</p>
-                <p id="summary" class="summary">Enter values to see the result.</p>
-              </div>
+            <label class="toggle">
+              <input id="use-sim" name="useSim" type="checkbox" />
+              <span>Run Monte Carlo check</span>
+            </label>
 
-              <div id="simulation" class="simulation" hidden>
-                <p class="label">Monte Carlo check</p>
-                <p id="simulation-rate" class="simulation-line"></p>
-                <p id="simulation-diff" class="simulation-line muted"></p>
-              </div>
+            <button type="submit">Analyze hand</button>
+          </form>
 
-              <div class="summary-card">
-                <p class="label">Formula used</p>
-                <p class="summary">
-                  Hypergeometric miss streak:
-                  C(deck size - valuable cards, cards seen) / C(deck size, cards seen)
-                </p>
-              </div>
+          <section class="results" aria-live="polite">
+            <div class="stat">
+              <p id="probability-label" class="label">Hit probability</p>
+              <p id="probability" class="value">0%</p>
+            </div>
 
-              <p id="error-message" class="error" hidden></p>
-            </section>
-          </div>
-        </section>
+            <div class="stat">
+              <p class="label">Rarity</p>
+              <p id="rarity" class="value">1 in 0</p>
+            </div>
 
-        <section class="tab-panel" data-panel="lucky" hidden>
-          <div class="panel">
-            <form id="lucky-form" class="controls">
-              <label>
-                <span>Lucky card triggers</span>
-                <input
-                  id="lucky-triggers"
-                  name="triggers"
-                  type="number"
-                  min="0"
-                  value="10"
-                  required
-                />
-              </label>
+            <div class="summary-card">
+              <p class="label">Read</p>
+              <p id="summary" class="summary">Enter values to see the result.</p>
+            </div>
 
-              <label class="toggle">
-                <input id="enable-mult" name="enableMult" type="checkbox" checked />
-                <span>Track mult hits</span>
-              </label>
+            <div id="simulation" class="simulation" hidden>
+              <p class="label">Monte Carlo check</p>
+              <p id="simulation-rate" class="simulation-line"></p>
+              <p id="simulation-diff" class="simulation-line muted"></p>
+            </div>
 
-              <label>
-                <span>Mult hits landed</span>
-                <input
-                  id="mult-hits"
-                  name="multHits"
-                  type="number"
-                  min="0"
-                  value="2"
-                  required
-                />
-              </label>
+            <div class="summary-card">
+              <p class="label">Formula used</p>
+              <p id="formula" class="summary"></p>
+            </div>
 
-              <label class="toggle">
-                <input id="enable-money" name="enableMoney" type="checkbox" checked />
-                <span>Track money hits</span>
-              </label>
-
-              <label>
-                <span>Money hits landed</span>
-                <input
-                  id="money-hits"
-                  name="moneyHits"
-                  type="number"
-                  min="0"
-                  value="1"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Dice count</span>
-                <input
-                  id="dice-count"
-                  name="diceCount"
-                  type="number"
-                  min="0"
-                  value="0"
-                  required
-                />
-              </label>
-
-              <label class="toggle">
-                <input id="lucky-at-least" name="useAtLeast" type="checkbox" />
-                <span>Use tail probability (auto)</span>
-              </label>
-
-              <button type="submit">Analyze lucky card</button>
-            </form>
-
-            <section class="results" aria-live="polite">
-              <div class="stat">
-                <p class="label">Hit probability</p>
-                <p id="lucky-probability" class="value">0%</p>
-              </div>
-
-              <div class="stat">
-                <p class="label">Rarity</p>
-                <p id="lucky-rarity" class="value">1 in 0</p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Read</p>
-                <p id="lucky-summary" class="summary">Enter values to see the result.</p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Rates in use</p>
-                <p id="lucky-breakdown" class="summary"></p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Formula used</p>
-                <p id="lucky-formula" class="summary"></p>
-              </div>
-
-              <p id="lucky-error-message" class="error" hidden></p>
-            </section>
-          </div>
-        </section>
-
-        <section class="tab-panel" data-panel="bloodstone" hidden>
-          <div class="panel">
-            <form id="bloodstone-form" class="controls">
-              <label>
-                <span>Triggers</span>
-                <input
-                  id="bloodstone-triggers"
-                  name="triggers"
-                  type="number"
-                  min="0"
-                  value="10"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Bloodstone hits</span>
-                <input
-                  id="bloodstone-hits"
-                  name="hits"
-                  type="number"
-                  min="0"
-                  value="5"
-                  required
-                />
-              </label>
-
-              <label class="toggle">
-                <input id="bloodstone-at-least" name="useAtLeast" type="checkbox" />
-                <span>Use tail probability (auto)</span>
-              </label>
-
-              <button type="submit">Analyze bloodstone</button>
-            </form>
-
-            <section class="results" aria-live="polite">
-              <div class="stat">
-                <p class="label">Hit probability</p>
-                <p id="bloodstone-probability" class="value">0%</p>
-              </div>
-
-              <div class="stat">
-                <p class="label">Rarity</p>
-                <p id="bloodstone-rarity" class="value">1 in 0</p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Read</p>
-                <p id="bloodstone-summary" class="summary">Enter values to see the result.</p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Rates in use</p>
-                <p id="bloodstone-breakdown" class="summary"></p>
-              </div>
-
-              <div class="summary-card">
-                <p class="label">Formula used</p>
-                <p id="bloodstone-formula" class="summary"></p>
-              </div>
-
-              <p id="bloodstone-error-message" class="error" hidden></p>
-            </section>
-          </div>
-        </section>
+            <p id="error-message" class="error" hidden></p>
+          </section>
+        </div>
       </section>
-    </main>
 
-    <script src="./js/probability.js"></script>
-    <script src="./js/outcomes.js"></script>
-    <script src="./js/tabs.js"></script>
-    <script src="./js/handOdds.js"></script>
-    <script src="./js/luckyOdds.js"></script>
-    <script src="./js/bloodstone.js"></script>
-    <script src="./js/main.js"></script>
-  </body>
+      <section class="tab-panel" data-panel="lucky" hidden>
+        <div class="panel">
+          <form id="lucky-form" class="controls">
+            <label>
+              <span>Lucky card triggers</span>
+              <input id="lucky-triggers" name="triggers" type="number" min="0" value="10" required />
+            </label>
+
+            <label class="toggle">
+              <input id="enable-mult" name="enableMult" type="checkbox" checked />
+              <span>Track mult hits</span>
+            </label>
+
+            <label>
+              <span>Mult hits landed</span>
+              <input id="mult-hits" name="multHits" type="number" min="0" value="2" required />
+            </label>
+
+            <label class="toggle">
+              <input id="enable-money" name="enableMoney" type="checkbox" checked />
+              <span>Track money hits</span>
+            </label>
+
+            <label>
+              <span>Money hits landed</span>
+              <input id="money-hits" name="moneyHits" type="number" min="0" value="1" required />
+            </label>
+
+            <label>
+              <span>Dice count</span>
+              <input id="dice-count" name="diceCount" type="number" min="0" value="0" required />
+            </label>
+
+            <label class="toggle">
+              <input id="lucky-at-least" name="useAtLeast" type="checkbox" />
+              <span>Use tail probability (auto)</span>
+            </label>
+
+            <button type="submit">Analyze lucky card</button>
+          </form>
+
+          <section class="results" aria-live="polite">
+            <div class="stat">
+              <p class="label">Hit probability</p>
+              <p id="lucky-probability" class="value">0%</p>
+            </div>
+
+            <div class="stat">
+              <p class="label">Rarity</p>
+              <p id="lucky-rarity" class="value">1 in 0</p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Read</p>
+              <p id="lucky-summary" class="summary">Enter values to see the result.</p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Rates in use</p>
+              <p id="lucky-breakdown" class="summary"></p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Formula used</p>
+              <p id="lucky-formula" class="summary"></p>
+            </div>
+
+            <p id="lucky-error-message" class="error" hidden></p>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="bloodstone" hidden>
+        <div class="panel">
+          <form id="bloodstone-form" class="controls">
+            <label>
+              <span>Triggers</span>
+              <input id="bloodstone-triggers" name="triggers" type="number" min="0" value="10" required />
+            </label>
+
+            <label>
+              <span>Bloodstone hits</span>
+              <input id="bloodstone-hits" name="hits" type="number" min="0" value="5" required />
+            </label>
+
+            <label class="toggle">
+              <input id="bloodstone-at-least" name="useAtLeast" type="checkbox" />
+              <span>Use tail probability (auto)</span>
+            </label>
+
+            <button type="submit">Analyze bloodstone</button>
+          </form>
+
+          <section class="results" aria-live="polite">
+            <div class="stat">
+              <p class="label">Hit probability</p>
+              <p id="bloodstone-probability" class="value">0%</p>
+            </div>
+
+            <div class="stat">
+              <p class="label">Rarity</p>
+              <p id="bloodstone-rarity" class="value">1 in 0</p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Read</p>
+              <p id="bloodstone-summary" class="summary">Enter values to see the result.</p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Rates in use</p>
+              <p id="bloodstone-breakdown" class="summary"></p>
+            </div>
+
+            <div class="summary-card">
+              <p class="label">Formula used</p>
+              <p id="bloodstone-formula" class="summary"></p>
+            </div>
+
+            <p id="bloodstone-error-message" class="error" hidden></p>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="./js/probability.js"></script>
+  <script src="./js/outcomes.js"></script>
+  <script src="./js/tabs.js"></script>
+  <script src="./js/handOdds.js"></script>
+  <script src="./js/luckyOdds.js"></script>
+  <script src="./js/bloodstone.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+
 </html>

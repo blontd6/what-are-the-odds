@@ -59,8 +59,11 @@
     return `1 in ${scientificFromLog10(reciprocalLog10)}`;
   }
 
-  function missStreakProbability(deckSize, targetCards, cardsSeen) {
-    return nCk(deckSize - targetCards, cardsSeen) / nCk(deckSize, cardsSeen);
+  function hypergeometricProbability(deckSize, targetCards, cardsSeen, hits) {
+    if (hits < 0 || hits > targetCards || hits > cardsSeen || deckSize - targetCards < cardsSeen - hits) {
+      return 0;
+    }
+    return (nCk(targetCards, hits) * nCk(deckSize - targetCards, cardsSeen - hits)) / nCk(deckSize, cardsSeen);
   }
 
   function log10Combination(n, k) {
@@ -93,11 +96,65 @@
     return max + Math.log10(1 + 10 ** (min - max));
   }
 
-  function log10MissStreakProbability(deckSize, targetCards, cardsSeen) {
+  function log10HypergeometricProbability(deckSize, targetCards, cardsSeen, hits) {
+    if (hits < 0 || hits > targetCards || hits > cardsSeen || deckSize - targetCards < cardsSeen - hits) {
+      return -Infinity;
+    }
     return (
-      log10Combination(deckSize - targetCards, cardsSeen) -
+      log10Combination(targetCards, hits) +
+      log10Combination(deckSize - targetCards, cardsSeen - hits) -
       log10Combination(deckSize, cardsSeen)
     );
+  }
+
+  function hypergeometricAtLeastProbability(deckSize, targetCards, cardsSeen, minimumHits) {
+    let total = 0;
+    const maxHits = Math.min(targetCards, cardsSeen);
+    for (let hits = minimumHits; hits <= maxHits; hits += 1) {
+      total += hypergeometricProbability(deckSize, targetCards, cardsSeen, hits);
+    }
+    return total;
+  }
+
+  function log10HypergeometricAtLeastProbability(deckSize, targetCards, cardsSeen, minimumHits) {
+    let total = -Infinity;
+    const maxHits = Math.min(targetCards, cardsSeen);
+    for (let hits = minimumHits; hits <= maxHits; hits += 1) {
+      total = log10Add(total, log10HypergeometricProbability(deckSize, targetCards, cardsSeen, hits));
+    }
+    return total;
+  }
+
+  function hypergeometricAtMostProbability(deckSize, targetCards, cardsSeen, maximumHits) {
+    let total = 0;
+    for (let hits = 0; hits <= maximumHits; hits += 1) {
+      total += hypergeometricProbability(deckSize, targetCards, cardsSeen, hits);
+    }
+    return total;
+  }
+
+  function log10HypergeometricAtMostProbability(deckSize, targetCards, cardsSeen, maximumHits) {
+    let total = -Infinity;
+    for (let hits = 0; hits <= maximumHits; hits += 1) {
+      total = log10Add(total, log10HypergeometricProbability(deckSize, targetCards, cardsSeen, hits));
+    }
+    return total;
+  }
+
+  function tailHypergeometricMode(deckSize, targetCards, cardsSeen, hits) {
+    const expectedHits = (cardsSeen * targetCards) / deckSize;
+    const useAtMost = hits < expectedHits;
+
+    return {
+      expectedHits,
+      direction: useAtMost ? "at most" : "at least",
+      probability: useAtMost
+        ? hypergeometricAtMostProbability(deckSize, targetCards, cardsSeen, hits)
+        : hypergeometricAtLeastProbability(deckSize, targetCards, cardsSeen, hits),
+      log10Probability: useAtMost
+        ? log10HypergeometricAtMostProbability(deckSize, targetCards, cardsSeen, hits)
+        : log10HypergeometricAtLeastProbability(deckSize, targetCards, cardsSeen, hits),
+    };
   }
 
   function binomialProbability(trials, hits, chance) {
@@ -185,8 +242,10 @@
     };
   }
 
-  function monteCarlo(deckSize, targetCards, cardsSeen, trials = 25000) {
-    let misses = 0;
+  function monteCarlo(deckSize, targetCards, cardsSeen, targetHits = 0, useAtLeast = false, trials = 25000) {
+    let matchingTrials = 0;
+    const expectedHits = (cardsSeen * targetCards) / deckSize;
+    const isAtMost = useAtLeast && targetHits < expectedHits;
 
     for (let trial = 0; trial < trials; trial += 1) {
       let hitsSeen = 0;
@@ -204,24 +263,36 @@
         remainingDeck -= 1;
       }
 
-      if (hitsSeen === 0) {
-        misses += 1;
+      let match = false;
+      if (useAtLeast) {
+        if (isAtMost) {
+          match = hitsSeen <= targetHits;
+        } else {
+          match = hitsSeen >= targetHits;
+        }
+      } else {
+        match = hitsSeen === targetHits;
+      }
+
+      if (match) {
+        matchingTrials += 1;
       }
     }
 
-    return misses / trials;
+    return matchingTrials / trials;
   }
 
   App.probability = {
     binomialProbability,
     formatPercent,
+    hypergeometricProbability,
     log10BinomialProbability,
-    log10MissStreakProbability,
+    log10HypergeometricProbability,
     luckyRate,
-    missStreakProbability,
     monteCarlo,
     oneIn,
     percent,
-    tailProbabilityMode,
+    tailBinomialMode: tailProbabilityMode,
+    tailHypergeometricMode,
   };
 })();

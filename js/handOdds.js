@@ -2,19 +2,22 @@
   const App = (window.App = window.App || {});
   const {
     formatPercent,
-    log10MissStreakProbability,
-    missStreakProbability,
+    hypergeometricProbability,
+    log10HypergeometricProbability,
+    tailHypergeometricMode,
     monteCarlo,
     oneIn,
     percent,
   } = App.probability;
-  const { classifyOutcome } = App.outcomes;
+  const { classifyOutcome, classifyLuckyOutcome } = App.outcomes;
 
   App.initHandOdds = function initHandOdds() {
     const form = document.querySelector("#analyzer-form");
+    const probabilityLabelNode = document.querySelector("#probability-label");
     const probabilityNode = document.querySelector("#probability");
     const rarityNode = document.querySelector("#rarity");
     const summaryNode = document.querySelector("#summary");
+    const formulaNode = document.querySelector("#formula");
     const simulationPanel = document.querySelector("#simulation");
     const simulationRateNode = document.querySelector("#simulation-rate");
     const simulationDiffNode = document.querySelector("#simulation-diff");
@@ -42,12 +45,14 @@
         deckSize: Number(data.get("deckSize")),
         targetCards: Number(data.get("targetCards")),
         cardsSeen: Number(data.get("cardsSeen")),
+        targetHits: Number(data.get("targetHits")),
+        useAtLeast: data.get("useAtLeast") === "on",
         useSim: data.get("useSim") === "on",
       };
     }
 
-    function validate({ deckSize, targetCards, cardsSeen }) {
-      if (![deckSize, targetCards, cardsSeen].every(Number.isInteger)) {
+    function validate({ deckSize, targetCards, cardsSeen, targetHits }) {
+      if (![deckSize, targetCards, cardsSeen, targetHits].every(Number.isInteger)) {
         return "Use whole numbers for all fields.";
       }
 
@@ -61,6 +66,10 @@
 
       if (cardsSeen < 0 || cardsSeen > deckSize) {
         return "Cards seen must be between 0 and the deck size.";
+      }
+
+      if (targetHits < 0 || targetHits > targetCards || targetHits > cardsSeen || deckSize - targetCards < cardsSeen - targetHits) {
+        return "Target hits must be possible given the deck size, valuable cards, and cards seen.";
       }
 
       return null;
@@ -77,30 +86,40 @@
 
       clearError();
 
-      const probability = missStreakProbability(
-        values.deckSize,
-        values.targetCards,
-        values.cardsSeen,
-      );
-      const log10Probability = log10MissStreakProbability(
-        values.deckSize,
-        values.targetCards,
-        values.cardsSeen,
-      );
-      const outcome = classifyOutcome(probability);
+      const tailMode = values.useAtLeast
+        ? tailHypergeometricMode(values.deckSize, values.targetCards, values.cardsSeen, values.targetHits)
+        : null;
 
+      const probability = values.useAtLeast
+        ? tailMode.probability
+        : hypergeometricProbability(values.deckSize, values.targetCards, values.cardsSeen, values.targetHits);
+      const log10Probability = values.useAtLeast
+        ? tailMode.log10Probability
+        : log10HypergeometricProbability(values.deckSize, values.targetCards, values.cardsSeen, values.targetHits);
+
+      const expectedHits = (values.cardsSeen * values.targetCards) / values.deckSize;
+      const isLucky = values.targetHits >= expectedHits;
+      const outcome = isLucky ? classifyLuckyOutcome(probability) : classifyOutcome(probability);
+
+      probabilityLabelNode.textContent = isLucky ? "Hit probability" : "Miss probability";
       probabilityNode.textContent = formatPercent(probability, log10Probability);
       rarityNode.textContent = oneIn(probability, log10Probability);
       summaryNode.textContent = outcome.text;
       setResultTone(outcome.status);
+
+      if (values.useAtLeast) {
+        formulaNode.textContent = `Hypergeometric cumulative (${tailMode.direction} ${values.targetHits} hits): Sum of C(valuable cards, hits) * C(deck size - valuable cards, cards seen - hits) / C(deck size, cards seen)`;
+      } else {
+        formulaNode.textContent = `Hypergeometric mass (exactly ${values.targetHits} hits): C(valuable cards, ${values.targetHits}) * C(deck size - valuable cards, cards seen - ${values.targetHits}) / C(deck size, cards seen)`;
+      }
 
       if (!values.useSim) {
         simulationPanel.hidden = true;
         return;
       }
 
-      const simulated = monteCarlo(values.deckSize, values.targetCards, values.cardsSeen);
-      simulationRateNode.textContent = `Simulated miss rate: ${percent(simulated)}`;
+      const simulated = monteCarlo(values.deckSize, values.targetCards, values.cardsSeen, values.targetHits, values.useAtLeast);
+      simulationRateNode.textContent = `Simulated hit rate: ${percent(simulated)}`;
       simulationDiffNode.textContent = `Difference from exact result: ${percent(
         Math.abs(simulated - probability),
       )}`;

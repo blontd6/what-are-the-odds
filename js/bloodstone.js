@@ -7,7 +7,7 @@
     log10BinomialProbability,
     oneIn,
     percent,
-    tailProbabilityMode,
+    tailBinomialMode,
   } = App.probability;
 
   App.initBloodstone = function initBloodstone() {
@@ -72,7 +72,7 @@
 
       const hitChance = 0.5;
       const tailMode = values.useAtLeast
-        ? tailProbabilityMode(values.triggers, values.hits, hitChance)
+        ? tailBinomialMode(values.triggers, values.hits, hitChance)
         : null;
       const probability = values.useAtLeast
         ? tailMode.probability
