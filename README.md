@@ -1,6 +1,8 @@
 # 🃏 What Are The Odds?
 
 [![Deployment](https://img.shields.io/badge/Live-Demo-brightgreen)](https://blontd6.github.io/what-are-the-odds/)
+<img width="460" height="215" alt="bal" src="https://github.com/user-attachments/assets/2da8c906-1d9d-4c2f-a8ec-f03070d0412c" />
+
 
 A high-precision probability calculator designed specifically for **Balatro**.
 ## Features
