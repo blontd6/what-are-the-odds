@@ -4,6 +4,10 @@
     formatPercent,
     hypergeometricProbability,
     log10HypergeometricProbability,
+    hypergeometricAtLeastProbability,
+    hypergeometricAtMostProbability,
+    log10HypergeometricAtLeastProbability,
+    log10HypergeometricAtMostProbability,
     tailHypergeometricMode,
     monteCarlo,
     oneIn,
@@ -18,6 +22,7 @@
     const probabilityLabelNode = document.querySelector("#probability-label");
     const probabilityNode = document.querySelector("#probability");
     const rarityNode = document.querySelector("#rarity");
+    const missProbabilityNode = document.querySelector("#miss-probability");
     const summaryNode = document.querySelector("#summary");
     const formulaNode = document.querySelector("#formula");
     const simulationPanel = document.querySelector("#simulation");
@@ -48,6 +53,7 @@
         deckSize: Number(data.get("deckSize")),
         targetCards: Number(data.get("targetCards")),
         cardsSeen: Number(data.get("cardsSeen")),
+        targetNeeded: Number(data.get("targetNeeded")),
         targetHits: Number(data.get("targetHits")),
         useAtLeast: data.get("useAtLeast") === "on",
         useSim: data.get("useSim") === "on",
@@ -55,8 +61,8 @@
       };
     }
 
-    function validate({ deckSize, targetCards, cardsSeen, targetHits }) {
-      if (![deckSize, targetCards, cardsSeen, targetHits].every(Number.isInteger)) {
+    function validate({ deckSize, targetCards, cardsSeen, targetNeeded, targetHits }) {
+      if (![deckSize, targetCards, cardsSeen, targetNeeded, targetHits].every(Number.isInteger)) {
         return "Use whole numbers for all fields.";
       }
 
@@ -74,6 +80,10 @@
 
       if (targetHits < 0 || targetHits > targetCards || targetHits > cardsSeen || deckSize - targetCards < cardsSeen - targetHits) {
         return "Target hits must be possible given the deck size, valuable cards, and cards seen.";
+      }
+
+      if (targetNeeded < 0 || targetNeeded > targetCards || targetNeeded > cardsSeen || deckSize - targetCards < cardsSeen - targetNeeded) {
+        return "Target needed must be possible given the deck size, valuable cards, and cards seen.";
       }
 
       return null;
@@ -108,6 +118,11 @@
       probabilityLabelNode.textContent = isLucky ? "Hit probability" : "Miss probability";
       probabilityNode.textContent = formatPercent(probability, log10Probability);
       rarityNode.textContent = oneIn(probability, log10Probability);
+      
+      const missProbability = hypergeometricAtMostProbability(values.deckSize, values.targetCards, values.cardsSeen, values.targetNeeded - 1);
+      const log10MissProbability = log10HypergeometricAtMostProbability(values.deckSize, values.targetCards, values.cardsSeen, values.targetNeeded - 1);
+      missProbabilityNode.textContent = formatPercent(missProbability, log10MissProbability);
+      
       summaryNode.textContent = outcome.text;
       setResultTone(outcome.status);
 

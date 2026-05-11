@@ -17,7 +17,7 @@
           <h1>How unlikely is this hand?</h1>
         </div>
         <p class="intro">
-          1.2.2
+          2.0.0
         </p>
       </header>
 
@@ -52,8 +52,13 @@
             </label>
 
             <label>
-              <span>Desired cards drawn</span>
-              <input id="target-hits" name="targetHits" type="number" min="0" value="0" required />
+              <span>Valuable cards needed</span>
+              <input id="target-needed" name="targetNeeded" type="number" min="0" value="5" required />
+            </label>
+
+            <label>
+              <span>Valuable cards drawn</span>
+              <input id="target-hits" name="targetHits" type="number" min="0" value="3" required />
             </label>
 
             <label class="toggle">
@@ -83,6 +88,11 @@
             <div class="stat">
               <p class="label">Rarity</p>
               <p id="rarity" class="value">1 in 0</p>
+            </div>
+
+            <div class="stat">
+              <p class="label">Odds of missing needed</p>
+              <p id="miss-probability" class="value">0%</p>
             </div>
 
             <div class="summary-card">

@@ -296,9 +296,13 @@
   App.probability = {
     binomialProbability,
     formatPercent,
+    hypergeometricAtLeastProbability,
+    hypergeometricAtMostProbability,
     hypergeometricProbability,
     log10BinomialProbability,
     log10HypergeometricProbability,
+    log10HypergeometricAtLeastProbability,
+    log10HypergeometricAtMostProbability,
     luckyRate,
     monteCarlo,
     oneIn,
